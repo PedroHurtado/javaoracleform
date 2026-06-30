@@ -2,9 +2,17 @@
 
 Instrucciones para trabajar en este proyecto.
 
-> Nota: el propósito funcional/de negocio del proyecto aún no está definido.
-> Este documento describe únicamente el stack técnico y la estructura creada
-> hasta ahora. No asumas funcionalidad que no esté reflejada aquí.
+## Propósito
+
+El objetivo del proyecto es **migrar (transponer) aplicaciones Oracle Forms a la
+pila tecnológica Java de este proyecto**: JSF (Mojarra) + PrimeFaces + Spring +
+Hibernate sobre Java 11.
+
+Cada parte de un Oracle Form (`.fmb` exportado a texto) se traslada a su capa
+correspondiente: disparadores/UI → `bean` (Controller), lógica de negocio →
+`service`, acceso a datos → `repository`, y bloques de datos → entidades JPA en
+`model`. La migración se apoya en un **conjunto de skills** (uno por fase/capa);
+ver la sección «Migración Oracle Forms → Java».
 
 ## Stack tecnológico
 
@@ -35,7 +43,9 @@ Las versiones están fijadas para ser compatibles con Java 11 (no migrar a
 hello/
 ├── pom.xml
 ├── .gitignore
-├── claude/CLAUDE.md                     # este archivo
+├── .claude/
+│   ├── CLAUDE.md                        # este archivo
+│   └── skills/oracle-forms-to-ddd/      # skill de migración Forms → dominio Java
 └── src/main/
     ├── java/com/example/app/
     │   ├── config/AppConfig.java        # Spring: DataSource, JPA/Hibernate, transacciones
@@ -64,6 +74,33 @@ hello/
   `#{nombreBean}`.
 - Los beans JSF se declaran con `@Component("...")` + `@Scope(...)` de Spring
   (no con anotaciones `javax.faces.bean.*`).
+
+## Migración Oracle Forms → Java
+
+Tarea recurrente del proyecto. Cuando el usuario pida migrar, transponer o
+"pasar" un Oracle Form a Java —aunque solo diga "extrae las entidades" o "modela
+el dominio"— aplica el skill correspondiente sin pedir confirmación de cuál usar.
+
+Mapeo de cada parte del Form a su capa Java:
+
+| Parte del Oracle Form                                    | Capa Java       | Paquete / convención |
+|----------------------------------------------------------|-----------------|----------------------|
+| Disparadores de UI, items de pantalla, navegación        | **Controller**  | `bean` — `@Component("xxxBean")` + `@Scope`, `Serializable` |
+| Lógica de negocio, paquetes `IA_*_PKG`, validación       | **Service**     | `service` — `@Service @Transactional`, inyección por constructor |
+| Acceso a datos (bloques BD, `query_source`/`dml_target`) | **Repository**  | `repository` — `@Repository` + `EntityManager` (JPQL) |
+| Bloques de datos BD → entidades / agregados DDD          | **Model/Entity**| `model` — `@Entity @Table`, JPA `javax.persistence.*` |
+
+Usa las clases `User*` existentes como plantilla de estilo de cada capa.
+
+### Skills (en `.claude/skills/`)
+
+- **`oracle-forms-to-ddd`** — Fase 1 (dominio): extrae el modelo DDD (agregados,
+  entidades, value objects) del Form y genera la capa `model`, validándola por
+  compilación. Es el punto de partida de las fases siguientes.
+
+> Las fases Repository, Service y Controller parten del modelo de dominio ya
+> validado por `oracle-forms-to-ddd`. Registra aquí los nuevos skills a medida
+> que se añadan.
 
 ## Comandos
 
