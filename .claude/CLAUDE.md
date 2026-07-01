@@ -97,6 +97,9 @@ Usa las clases `User*` existentes como plantilla de estilo de cada capa.
 - **`oracle-forms-to-ddd`** — Fase 1 (dominio): extrae el modelo DDD (agregados,
   entidades, value objects) del Form y genera la capa `model`, validándola por
   compilación. Es el punto de partida de las fases siguientes.
+- **`oracle-forms-to-wireframe`** — Análisis de viabilidad (no genera código):
+  reconstruye la UI del Form exportado como un wireframe HTML interactivo
+  (`<NOMBRE>/wireframe.html`) para *ver* las pantallas antes de migrar.
 
 > Las fases Repository, Service y Controller parten del modelo de dominio ya
 > validado por `oracle-forms-to-ddd`. Registra aquí los nuevos skills a medida

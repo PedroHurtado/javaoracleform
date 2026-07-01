@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>IAAL0600 — Wireframe interactivo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Kalam:wght@300;400;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#2b2b2b; --ink-soft:#5a5a5a; --line:#3a3a3a;
+    --paper:#f4f2ec; --card:#fffdf8; --field:#ffffff; --field-ro:#ece9e1;
+    --accent:#3b6ea5; --accent-soft:#dbe6f2; --grid-head:#e7e2d6;
+    --sketch: 2px 2px 0 rgba(40,40,40,.18);
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0; background:var(--paper); color:var(--ink);
+    font-family:"Kalam", "Comic Sans MS", "Segoe Print", cursive;
+    font-size:15px; line-height:1.35;
+  }
+  /* ---- toolbar (BOTONERA) ---- */
+  .toolbar{
+    position:sticky; top:0; z-index:20;
+    background:#efece3; border-bottom:2px solid var(--line);
+    padding:6px 10px; display:flex; gap:14px; align-items:center; flex-wrap:wrap;
+    box-shadow:0 2px 0 rgba(40,40,40,.12);
+  }
+  .logo{
+    border:2px solid var(--line); border-radius:4px; padding:4px 10px;
+    background:#fff; font-weight:700; letter-spacing:.5px;
+    box-shadow:var(--sketch);
+  }
+  .session{display:flex; gap:12px; flex-wrap:wrap; align-items:center; color:var(--ink-soft); font-size:13px}
+  .session span b{color:var(--ink)}
+  .fakefield{display:inline-block; min-width:70px; height:16px; border-bottom:1.5px dashed #999; vertical-align:middle}
+  .tbtns{display:flex; gap:5px; margin-left:auto; flex-wrap:wrap}
+  .tbtn{
+    border:1.6px solid var(--line); background:#f7f4ec; border-radius:5px;
+    padding:3px 8px; cursor:pointer; font-family:inherit; font-size:13px; color:var(--ink);
+    box-shadow:var(--sketch); transition:transform .05s ease, background .1s;
+  }
+  .tbtn:hover{background:#fff}
+  .tbtn:active{transform:translate(2px,2px); box-shadow:none}
+
+  /* ---- layout ---- */
+  .shell{display:grid; grid-template-columns:230px 1fr; min-height:calc(100vh - 46px)}
+  .nav{
+    border-right:2px solid var(--line); padding:14px 10px; background:#efece3;
+  }
+  .nav h2{font-size:13px; text-transform:uppercase; letter-spacing:1px; color:var(--ink-soft); margin:16px 6px 6px}
+  .nav h2:first-child{margin-top:0}
+  .nav a{
+    display:block; padding:6px 10px; margin:3px 0; cursor:pointer; color:var(--ink);
+    border:1.5px solid transparent; border-radius:6px; text-decoration:none;
+  }
+  .nav a:hover{background:#fff; border-color:#cfc9ba}
+  .nav a.active{background:var(--accent-soft); border-color:var(--accent); font-weight:700}
+  .stage{padding:26px 30px}
+
+  /* ---- window card ---- */
+  .win{
+    display:none; max-width:760px; margin:0 auto;
+    background:var(--card); border:2px solid var(--line); border-radius:8px;
+    box-shadow:5px 5px 0 rgba(40,40,40,.15); overflow:hidden;
+  }
+  .win.show{display:block; animation:pop .18s ease}
+  @keyframes pop{from{opacity:0; transform:translateY(6px)} to{opacity:1; transform:none}}
+  .titlebar{
+    background:#e6e1d4; border-bottom:2px solid var(--line);
+    padding:7px 12px; display:flex; align-items:center; gap:8px; font-weight:700;
+  }
+  .titlebar .dots{margin-left:auto; display:flex; gap:6px}
+  .dot{width:13px; height:13px; border:1.5px solid var(--line); border-radius:3px; background:#fff; display:inline-block}
+  .winbody{padding:18px 20px 24px}
+
+  fieldset{
+    border:1.6px dashed #8c8578; border-radius:7px; margin:0 0 18px; padding:12px 16px 16px;
+  }
+  legend{padding:0 8px; font-weight:700; color:var(--accent); font-size:14px}
+  .row{display:flex; flex-wrap:wrap; gap:10px 18px; align-items:center; margin:9px 0}
+  .fld{display:flex; align-items:center; gap:7px; }
+  .fld > label{color:var(--ink-soft); min-width:auto}
+  input.w, .disp, select.w{
+    font-family:inherit; font-size:14px; color:var(--ink);
+    border:1.5px solid #9a9384; border-radius:4px; background:var(--field);
+    padding:3px 7px; height:26px;
+  }
+  input.w{min-width:150px}
+  input.sm{min-width:44px; width:44px; text-align:center}
+  select.w{min-width:160px; background:var(--field)}
+  .disp{background:var(--field-ro); border-style:solid; color:#555; min-width:120px; display:inline-flex; align-items:center}
+  .disp.sm{min-width:44px; width:44px; justify-content:center}
+  input.date{min-width:110px}
+  .chk{display:flex; align-items:center; gap:7px}
+  .chk input{width:16px; height:16px}
+  .hint{color:#8a8378; font-size:12px; font-style:italic}
+  .prefixdash{color:#8a8378}
+
+  /* ---- grid (multi-record) ---- */
+  table.grid{border-collapse:collapse; width:100%; margin-top:4px}
+  table.grid th{background:var(--grid-head); border:1.4px solid #9a9384; padding:4px 8px; font-size:13px; text-align:left; color:var(--ink)}
+  table.grid td{border:1.4px solid #b8b1a2; padding:2px 6px}
+  table.grid td .cell{width:100%; height:20px; background:var(--field); border:1px solid #cfc7b6; border-radius:3px}
+
+  /* ---- consulta estados special ---- */
+  .split{display:grid; grid-template-columns:150px 1fr; gap:14px; margin-top:6px}
+  .crotales{border:1.6px dashed #8c8578; border-radius:7px; padding:10px}
+  .crotales .leg{font-weight:700; color:var(--accent); font-size:13px; margin-bottom:6px}
+  .crotales .item{height:20px; background:var(--field); border:1px solid #cfc7b6; border-radius:3px; margin:5px 0; cursor:pointer}
+  .crotales .item:hover{background:var(--accent-soft)}
+  .tabbar{display:flex; gap:4px; border-bottom:2px solid var(--line)}
+  .tab{
+    border:1.6px solid var(--line); border-bottom:none; border-radius:7px 7px 0 0;
+    padding:5px 12px; cursor:pointer; background:#e6e1d4; font-size:13px; color:var(--ink-soft);
+    position:relative; top:2px;
+  }
+  .tab.active{background:var(--card); color:var(--accent); font-weight:700; top:2px; border-bottom:2px solid var(--card)}
+  .tabpanel{display:none; border:1.6px solid var(--line); border-top:none; padding:14px 16px; background:var(--card); border-radius:0 0 7px 7px}
+  .tabpanel.show{display:block}
+
+  /* ---- toast ---- */
+  .toast{
+    position:fixed; bottom:22px; left:50%; transform:translateX(-50%) translateY(20px);
+    background:var(--ink); color:#fff; padding:8px 16px; border-radius:20px; font-size:13px;
+    opacity:0; pointer-events:none; transition:all .2s ease; z-index:50;
+  }
+  .toast.show{opacity:1; transform:translateX(-50%) translateY(0)}
+  .foot{max-width:760px; margin:16px auto 0; color:#8a8378; font-size:12px; text-align:center}
+</style>
+</head>
+<body>
+
+<!-- ===================== BOTONERA (toolbar comun) ===================== -->
+<div class="toolbar">
+  <div class="logo">IAAL0600</div>
+  <div class="session">
+    <span><b>Proceso:</b><i class="fakefield"></i></span>
+    <span><b>Usuario:</b><i class="fakefield" style="min-width:50px"></i></span>
+    <span><b>Fecha:</b><i class="fakefield" style="min-width:60px"></i></span>
+    <span><b>Modo:</b><i class="fakefield" style="min-width:30px"></i></span>
+  </div>
+  <div class="tbtns" id="tbtns">
+    <button class="tbtn" data-t="Insertar Registro">Ins</button>
+    <button class="tbtn" data-t="Eliminar Registro">Del</button>
+    <button class="tbtn" data-t="Grabar">Grb</button>
+    <button class="tbtn" data-t="Introducir Consulta">IQry</button>
+    <button class="tbtn" data-t="Ejecutar la Consulta">EQry</button>
+    <button class="tbtn" data-t="Cancelar Consulta">Can</button>
+    <button class="tbtn" data-t="Imprimir Pantalla">Prt</button>
+    <button class="tbtn" data-t="Limpiar Registro">Clr</button>
+    <button class="tbtn" data-t="Primer Registro">1&ordm;</button>
+    <button class="tbtn" data-t="Registro Anterior">&larr;</button>
+    <button class="tbtn" data-t="Registro Siguiente">&rarr;</button>
+    <button class="tbtn" data-t="Ultimo Registro">Ult</button>
+    <button class="tbtn" data-t="Lista de Valores">LoV</button>
+    <button class="tbtn" data-t="Ejecuta Proceso">Run</button>
+    <button class="tbtn" data-t="Salir">Salir</button>
+  </div>
+</div>
+
+<div class="shell">
+  <!-- ===================== NAV ===================== -->
+  <nav class="nav" id="nav">
+    <h2>Recepción</h2>
+    <a data-s="recepcion" class="active">Recepción de dispositivos</a>
+    <a data-s="recepcion_indiv">Recepción individual</a>
+    <h2>Distribución</h2>
+    <a data-s="dist_dispo">Distribución de dispositivos</a>
+    <h2>Deshacer</h2>
+    <a data-s="des_recep">Deshacer recepción</a>
+    <a data-s="des_dist">Deshacer distribución</a>
+    <h2>Anulación</h2>
+    <a data-s="anular_dist">Anular distribución</a>
+    <a data-s="anular_recep">Anular recepción</a>
+    <a data-s="des_anul_rec">Deshacer anular recibidos</a>
+    <a data-s="des_anul_dist">Deshacer anular distribuidos</a>
+    <h2>Consulta</h2>
+    <a data-s="consulta_estados">Consulta de estados</a>
+  </nav>
+
+  <!-- ===================== STAGE ===================== -->
+  <main class="stage" id="stage"></main>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ---------- helpers para construir campos ----------
+const el = (tag, cls, txt) => { const e=document.createElement(tag); if(cls)e.className=cls; if(txt!=null)e.textContent=txt; return e; };
+
+function field(f){
+  const wrap = el('div','fld');
+  if(f.label) wrap.appendChild(el('label',null,f.label+':'));
+  if(f.type==='range'){
+    wrap.querySelector('label')?.remove();
+    wrap.appendChild(el('label',null,f.label));
+    wrap.appendChild(el('span','prefixdash','—'));
+    wrap.appendChild(disp('sm'));
+    wrap.appendChild(input('w'));
+    return wrap;
+  }
+  if(f.type==='list'){ wrap.appendChild(select(f.opts)); }
+  else if(f.type==='display'){ const d=disp(); if(f.val)d.textContent=f.val; wrap.appendChild(d); }
+  else if(f.type==='date'){ const i=input('w date'); i.placeholder='dd/mm/aaaa'; wrap.appendChild(i); }
+  else if(f.type==='pais'){ wrap.appendChild(disp('sm')); wrap.appendChild(input('w')); }
+  else { const i=input('w'); if(f.hint) i.placeholder=f.hint; wrap.appendChild(i); }
+  if(f.note) wrap.appendChild(el('span','hint',f.note));
+  return wrap;
+}
+function input(cls){ const i=el('input','w '+(cls||'')); i.type='text'; return i; }
+function disp(cls){ const d=el('div','disp '+(cls||'')); return d; }
+function select(opts){
+  const s=el('select','w');
+  (opts||['— seleccionar —']).forEach(o=>{ const op=el('option',null,o); s.appendChild(op); });
+  return s;
+}
+function chk(label){
+  const w=el('label','chk'); const c=el('input'); c.type='checkbox'; w.appendChild(c); w.appendChild(el('span',null,label)); return w;
+}
+function group(legend, rows){
+  const fs=el('fieldset'); fs.appendChild(el('legend',null,legend));
+  rows.forEach(r=>{ const row=el('div','row'); r.forEach(f=>row.appendChild(field(f))); fs.appendChild(row); });
+  return fs;
+}
+
+// ---------- datos de las pantallas ----------
+const SP = ['Bovino','Ovino','Caprino','Porcino','Equino'];
+const screens = {
+  recepcion:{ win:'Recepción de I. Electrónicos', groups:[
+    ['Dispositivos', [
+      [{label:'Especie',type:'list',opts:SP}],
+      [{label:'Último dispositivo recibido',type:'display'}] ]],
+    ['Recepción', [
+      [{label:'Fabricante',type:'text',hint:'ICAR…'}],
+      [{label:'Proveedor',type:'text'}],
+      [{label:'Tipo de dispositivo',type:'list',opts:['— tipo —']}],
+      [{label:'Norma de fabricación',type:'list',opts:['— norma —']}],
+      [{label:'País',type:'pais'}],
+      [{label:'Último dispositivo a recibir',type:'range'}],
+      [{label:'Total de dispositivos',type:'display',val:'0'}],
+      [{label:'Fecha de recepción',type:'date'}] ]] ]},
+
+  recepcion_indiv:{ win:'Recepción de I. Electrónico Individual', groups:[
+    ['Recepción', [
+      [{label:'Especie',type:'list',opts:SP}],
+      [{label:'Fabricante',type:'text'}],
+      [{label:'Proveedor',type:'text'}],
+      [{label:'Tipo de dispositivo',type:'list',opts:['— tipo —']}],
+      [{label:'Norma de fabricación',type:'list',opts:['— norma —']}],
+      [{label:'Último dispositivo recibido',type:'display'}],
+      [{label:'Dispositivo a recibir',type:'text'}],
+      [{label:'Fecha de recepción',type:'date'}] ]] ]},
+
+  dist_dispo:{ win:'Distribución de dispositivos', groups:[
+    ['Distribuir', [
+      [{label:'Especie',type:'list',opts:SP}],
+      [{label:'Identificador inicial',type:'range'}],
+      [{label:'Identificador final',type:'range'}],
+      [{label:'ADS',type:'text'}],
+      [{label:'Veterinarios',type:'text'}],
+      [{label:'Total disp. a distribuir',type:'display',val:'0',note:'solo lectura'}],
+      [{label:'Fecha de distribución',type:'date'}] ]] ]},
+
+  des_recep:{ win:'Deshacer recepción', groups:[
+    ['Deshacer', [
+      [{label:'Especie',type:'list',opts:SP}],
+      [{label:'Identificador inicial',type:'range'}],
+      [{label:'Identificador final',type:'range'}],
+      [{label:'Total disp. a deshacer',type:'display',val:'0',note:'solo lectura'}] ]] ]},
+
+  des_dist:{ win:'Deshacer distribución', groups:[
+    ['Deshacer', [
+      [{label:'Especie',type:'list',opts:SP}],
+      [{label:'Identificador inicial',type:'range'}],
+      [{label:'Identificador final',type:'range'}],
+      [{label:'Total disp. a deshacer',type:'display',val:'0',note:'solo lectura'}] ]] ]},
+
+  anular_dist:{ win:'Anular distribución', groups:[
+    ['Anulación', [
+      [{label:'Especie',type:'list',opts:SP}],
+      [{label:'Identificador inicial',type:'range'}],
+      [{label:'Identificador final',type:'range'}],
+      [{label:'Total de dispositivos a anular',type:'display',val:'0'}],
+      [{label:'Fecha de anulación',type:'date'}] ]] ]},
+
+  anular_recep:{ win:'Anular recepción', groups:[
+    ['Anulación', [
+      [{label:'Especie',type:'list',opts:SP}],
+      [{label:'Identificador inicial',type:'range'}],
+      [{label:'Identificador final',type:'range'}],
+      [{label:'Total de dispositivos a anular',type:'display',val:'0'}],
+      [{label:'Fecha de anulación',type:'date'}] ]] ]},
+
+  des_anul_rec:{ win:'Deshacer Anular Recibidos', groups:[
+    ['Deshacer A. Recibidos', [
+      [{label:'Especie',type:'list',opts:SP}],
+      [{label:'Identificador inicial',type:'range'}],
+      [{label:'Identificador final',type:'range'}],
+      [{label:'Total de dispositivos',type:'display',val:'0'}] ]] ]},
+
+  des_anul_dist:{ win:'Deshacer Anular Distribuidos', groups:[
+    ['Deshacer A. Distribuidos', [
+      [{label:'Especie',type:'list',opts:SP}],
+      [{label:'Identificador inicial',type:'range'}],
+      [{label:'Identificador final',type:'range'}],
+      [{label:'Total de dispositivos',type:'display',val:'0'}] ]] ]},
+};
+
+// ---------- render generico ----------
+function renderWindow(id){
+  const s = screens[id];
+  const win = el('div','win show');
+  const tb = el('div','titlebar'); tb.appendChild(el('span',null,s.win));
+  const dots=el('div','dots'); dots.append(el('span','dot'),el('span','dot'),el('span','dot')); tb.appendChild(dots);
+  win.appendChild(tb);
+  const body = el('div','winbody');
+  s.groups.forEach(g=> body.appendChild(group(g[0], g[1])) );
+  win.appendChild(body);
+  return win;
+}
+
+// ---------- consulta de estados (especial) ----------
+function renderConsulta(){
+  const win = el('div','win show');
+  const tb = el('div','titlebar'); tb.appendChild(el('span',null,'Consulta de estados de crotales'));
+  const dots=el('div','dots'); dots.append(el('span','dot'),el('span','dot'),el('span','dot')); tb.appendChild(dots);
+  win.appendChild(tb);
+  const body = el('div','winbody');
+
+  // cabecera
+  const head = el('div','row');
+  head.appendChild(field({label:'Crotal',type:'text'}));
+  head.appendChild(field({label:'Id. Electrónico',type:'text'}));
+  head.appendChild(field({label:'UELN',type:'text'}));
+  head.appendChild(field({label:'Especie',type:'display'}));
+  body.appendChild(head);
+
+  // banda Estados
+  const fsEst = el('fieldset'); fsEst.appendChild(el('legend',null,'Estados'));
+  const t = el('table','grid');
+  t.innerHTML = '<tr><th style="width:90px">Código</th><th>Descripción del estado</th></tr>'+
+    '<tr><td><div class="cell"></div></td><td><div class="cell"></div></td></tr>';
+  fsEst.appendChild(t); body.appendChild(fsEst);
+
+  // split: Crotales + tabs
+  const split = el('div','split');
+  const crot = el('div','crotales');
+  crot.appendChild(el('div','leg','Crotales'));
+  for(let i=0;i<6;i++){ const it=el('div','item'); it.onclick=()=>toast('Crotal seleccionado'); crot.appendChild(it); }
+  split.appendChild(crot);
+
+  // detalle con pestañas
+  const detail = el('div');
+  const bar = el('div','tabbar');
+  const tabs = [
+    ['Identificación', tabIdent],
+    ['Animal', tabAnimal],
+    ['Localizaciones', tabLocal],
+    ['Reidentificaciones', tabRecro],
+  ];
+  const panels = [];
+  tabs.forEach((tb2,i)=>{
+    const b = el('div','tab'+(i===0?' active':''), tb2[0]); b.dataset.i=i;
+    b.onclick=()=>{ bar.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
+                    panels.forEach(p=>p.classList.remove('show'));
+                    b.classList.add('active'); panels[i].classList.add('show'); };
+    bar.appendChild(b);
+    const p = tb2[1](); p.classList.add('tabpanel'); if(i===0)p.classList.add('show'); panels.push(p);
+  });
+  detail.appendChild(bar);
+  panels.forEach(p=>detail.appendChild(p));
+  split.appendChild(detail);
+  body.appendChild(split);
+
+  win.appendChild(body);
+  return win;
+}
+function tabIdent(){
+  const p=el('div');
+  const add=(label,extra)=>{ const r=el('div','row'); r.appendChild(chk(label)); r.appendChild(field({label:'Fecha',type:'date'})); if(extra)extra.forEach(f=>r.appendChild(field(f))); p.appendChild(r); };
+  add('Recibido');
+  add('Distribuido',[{label:'Oficina',type:'text'},{label:'ADS',type:'text'}]);
+  add('Repartido',[{label:'Explotación',type:'text'},{label:'Veterinario',type:'text'}]);
+  add('Asignado');
+  add('Sustituido');
+  add('Anulado');
+  return p;
+}
+function tabAnimal(){
+  const p=el('div');
+  p.appendChild(mkrow([{label:'Raza',type:'text'},{label:'Explotación',type:'text'}]));
+  const fsSexo=el('fieldset'); fsSexo.appendChild(el('legend',null,'Sexo'));
+  const rs=el('div','row');
+  ['Macho','Hembra'].forEach(o=>{ const l=el('label','chk'); const r=el('input'); r.type='radio'; r.name='sexo'; l.append(r,el('span',null,o)); rs.appendChild(l); });
+  fsSexo.appendChild(rs); p.appendChild(fsSexo);
+  p.appendChild(mkrow([{label:'Fecha nac.',type:'date'},{label:'Fecha baja',type:'date'}]));
+  p.appendChild(mkrow([{label:'Estado',type:'text'},{label:'Restricción',type:'text'}]));
+  p.appendChild(mkrow([{label:'Crotal madre',type:'text'},{label:'Id. Lidia',type:'text'}]));
+  return p;
+}
+function tabLocal(){
+  const p=el('div');
+  const fs=el('fieldset'); fs.appendChild(el('legend',null,'Localizaciones del animal'));
+  const t=el('table','grid');
+  let html='<tr><th>Explotación</th><th>F. Inicio</th><th>Relación</th><th>F. Fin</th></tr>';
+  for(let i=0;i<3;i++) html+='<tr><td><div class="cell"></div></td><td><div class="cell"></div></td><td><div class="cell"></div></td><td><div class="cell"></div></td></tr>';
+  t.innerHTML=html; fs.appendChild(t); p.appendChild(fs);
+  return p;
+}
+function tabRecro(){
+  const p=el('div');
+  p.appendChild(mkrow([{label:'Sustituido por…',type:'text'},{label:'Motivo',type:'text'}]));
+  p.appendChild(mkrow([{label:'Sustituto de…',type:'text'},{label:'Motivo',type:'text'}]));
+  p.appendChild(mkrow([{label:'Tipo dispositivo',type:'text'},{label:'F. Solicitud',type:'date'}]));
+  p.appendChild(mkrow([{label:'Empresa',type:'text'},{label:'Explotación',type:'text'},{label:'Número',type:'text'}]));
+  p.appendChild(mkrow([{label:'Nº Registro',type:'text'},{label:'Nombre explotación',type:'text'}]));
+  return p;
+}
+function mkrow(fields){ const r=el('div','row'); fields.forEach(f=>r.appendChild(field(f))); return r; }
+
+// ---------- navegacion ----------
+const stage = document.getElementById('stage');
+function show(id){
+  stage.innerHTML='';
+  stage.appendChild(id==='consulta_estados' ? renderConsulta() : renderWindow(id));
+  const foot = el('div','foot','Wireframe interactivo · reconstruido de IAAL0600.txt · los datos son de ejemplo');
+  stage.appendChild(foot);
+  document.querySelectorAll('.nav a').forEach(a=>a.classList.toggle('active', a.dataset.s===id));
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+document.getElementById('nav').addEventListener('click', e=>{
+  const a=e.target.closest('a'); if(!a) return; show(a.dataset.s);
+});
+
+// ---------- toolbar toast ----------
+let toastT;
+function toast(msg){
+  const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show');
+  clearTimeout(toastT); toastT=setTimeout(()=>t.classList.remove('show'),1400);
+}
+document.getElementById('tbtns').addEventListener('click', e=>{
+  const b=e.target.closest('.tbtn'); if(!b) return; toast('▶ '+b.dataset.t);
+});
+
+// arranque
+show('recepcion');
+</script>
+</body>
+</html>
