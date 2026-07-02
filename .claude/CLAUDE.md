@@ -100,6 +100,11 @@ Usa las clases `User*` existentes como plantilla de estilo de cada capa.
 - **`oracle-forms-to-wireframe`** — Análisis de viabilidad (no genera código):
   reconstruye la UI del Form exportado como un wireframe HTML interactivo
   (`<NOMBRE>/wireframe.html`) para *ver* las pantallas antes de migrar.
+- **`oracle-forms-to-business-logic`** — Análisis del comportamiento (no genera
+  código): extrae la lógica de negocio de cada formulario de entrada de usuario
+  (bloque) a un Markdown por formulario en `docs/logica-negocio/<BLOQUE>.md`
+  (disparadores con su PL/SQL, validaciones y llamadas a paquetes `IA_*_PKG`).
+  Es la especificación legible que alimenta a las fases Service/Repository/Controller.
 
 > Las fases Repository, Service y Controller parten del modelo de dominio ya
 > validado por `oracle-forms-to-ddd`. Registra aquí los nuevos skills a medida
